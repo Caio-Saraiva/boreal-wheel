@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#d9f1ed"><title>Boreal Wheel — Input, reconnected.</title>
+  <link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+<svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+ <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+ <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 3v5m0 6v7M12 3v11m0 6v1m7-18v2m0 6v10"/><rect x="2" y="8" width="6" height="6" rx="2"/><rect x="9" y="14" width="6" height="6" rx="2"/><rect x="16" y="5" width="6" height="6" rx="2"/></symbol>
+ <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></symbol>
+ <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M2 12h5l3-8 4 16 3-8h5"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-5-5 5 5-5 5"/></symbol>
+ <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3h.01"/></symbol>
+ <symbol id="i-plug" viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v4"/></symbol>
+ <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="m4 8 6 3m10-3-6 3m-2 4v6"/></symbol>
+ <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M7 7h10c3 0 5 11 3 12-2 1-4-3-5-3H9c-1 0-3 4-5 3C2 18 4 7 7 7Z"/><path d="M8 9v5m-2.5-2.5h5m5-1h.01m2 3h.01"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></symbol>
+ <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/></symbol>
+ <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+</defs></svg>
+<div class="aero-scene" aria-hidden="true"><div class="sun"></div><div class="hill hill-back"></div><div class="hill hill-front"></div><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div></div>
+<div class="app-shell">
+<aside class="sidebar">
+  <a href="/" class="brand" aria-label="Boreal Wheel, início"><span class="brand-orb">b<span></span></span><span>boreal <b>wheel</b><small>INPUT, RECONNECTED.</small></span></a>
+  <div class="sidebar-label">SEU ESPAÇO DE CONTROLE</div>
+  <nav aria-label="Navegação principal">
+    <button class="nav-item active" data-page="overview"><svg><use href="#i-grid"/></svg>Visão geral<span class="nav-dot"></span></button>
+    <button class="nav-item" data-page="mapping"><svg><use href="#i-sliders"/></svg>Mapeamento</button>
+    <button class="nav-item" data-page="calibration"><svg><use href="#i-target"/></svg>Calibração</button>
+    <button class="nav-item" data-page="diagnostics"><svg><use href="#i-pulse"/></svg>Diagnóstico</button>
+  </nav>
+  <div class="sidebar-note"><span class="tiny-orb"></span><p>Hardware clássico.<br><strong>Novas possibilidades.</strong></p><span class="note-line"></span><small>Uma ponte entre o seu<br>volante e a próxima corrida.</small></div>
+  <div class="sidebar-bottom"><button class="help-button" id="help-open"><svg><use href="#i-help"/></svg>Como funciona<svg class="small"><use href="#i-chevron"/></svg></button><div class="version"><span class="status-dot"></span>Núcleo C11 <span>v0.2.0</span></div></div>
+</aside>
+<main>
+  <header class="topbar"><div class="breadcrumb">Boreal Wheel <span>/</span> Central de controle</div><div class="topbar-right"><span class="local-badge"><span class="status-dot"></span>Local e privado</span><button class="theme-button" id="theme-toggle" aria-pressed="false">Tema escuro</button><button class="icon-button" id="help-top" aria-label="Ajuda"><svg><use href="#i-help"/></svg></button></div></header>
+  <div class="main-content">
+    <section class="page-heading"><div><div class="eyebrow">SEU SETUP, REIMAGINADO</div><h1 id="page-title">De volta à pista<span>.</span></h1><p id="page-subtitle">Seu Ferrari 458 Italia. A mesma sensação, uma nova conexão.</p></div><div class="heading-actions"><div class="source-switch" aria-label="Fonte de entrada"><button id="physical-mode" class="selected">Dispositivo</button><button id="demo-mode"><svg><use href="#i-play"/></svg>Demo</button></div><button class="primary-button" id="bridge-toggle"><svg><use href="#i-plug"/></svg><span>Ativar ponte</span></button></div></section>
+    <div id="connection-error" class="notice error" hidden>O núcleo C está offline. Execute o run.cmd e mantenha o terminal aberto.</div>
+    <section class="device-strip glass"><div class="device-symbol"><svg><use href="#i-wheel"/></svg></div><div class="device-info"><div class="device-kicker">THRUSTMASTER <span>·</span> XBOX 360</div><h2>Ferrari 458 Italia</h2><div id="device-detail">Volante + pedais · aguardando conexão USB</div></div><div class="device-link"><span class="flow-node">USB</span><span class="flow-line"></span><span class="bridge-node">b</span><span class="flow-line"></span><span class="flow-node">XInput</span></div><div class="device-connection"><span id="device-badge" class="badge"><span class="status-dot"></span>Aguardando USB</span><small id="source-label">Procurando dispositivo…</small></div></section>
+    <div id="demo-notice" class="notice demo-notice" hidden><span><svg><use href="#i-play"/></svg><b>Modo demonstração</b> · Entradas simuladas, sem saída para jogos.</span><button id="demo-interaction">Usar teclado e mouse <span>↗</span></button></div>
+    <div id="physical-notice" class="notice physical-notice"><svg><use href="#i-plug"/></svg><span id="physical-notice-text">Conecte seu volante ou ative Demo para explorar a interface.</span></div>
+
+    <section id="page-overview" class="page-panel">
+      <div class="monitor-grid">
+        <article class="glass wheel-card"><div class="card-heading"><div><span class="section-index">01</span><h2>Direção</h2></div><span class="live-label"><span class="status-dot"></span>SAÍDA CALIBRADA</span></div>
+          <div class="wheel-stage">
+            <div class="stage-caption"><span>F458</span><small>ITALIA / 270° VISUAIS</small></div><div class="stage-axis">EIXO LX <span id="lx-small">0</span></div>
+            <svg class="wheel-visual" viewBox="0 0 620 350" role="img" aria-label="Visualização do volante e botões">
+              <defs>
+                <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#444e50"/><stop offset=".24" stop-color="#111a1c"/><stop offset=".52" stop-color="#3a4546"/><stop offset=".79" stop-color="#0e1719"/><stop offset="1" stop-color="#3a4546"/></linearGradient>
+                <linearGradient id="metal" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#e6eeee"/><stop offset=".45" stop-color="#a0b4b4"/><stop offset=".5" stop-color="#cad8d6"/><stop offset="1" stop-color="#678080"/></linearGradient>
+                <linearGradient id="hub" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#39484b"/><stop offset="1" stop-color="#17282c"/></linearGradient>
+                <linearGradient id="glass-highlight" x1="0" y1="0" x2="0" y2="1"><stop stop-color="white" stop-opacity=".65"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+                <radialGradient id="wheel-halo"><stop stop-color="#7bdece" stop-opacity=".24"/><stop offset="1" stop-color="#7bdece" stop-opacity="0"/></radialGradient>
+                <filter id="wheel-shadow" x="-30%" y="-30%" width="160%" height="175%"><feDropShadow dx="0" dy="18" stdDeviation="12" flood-color="#24494b" flood-opacity=".2"/><feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#102e30" flood-opacity=".3"/></filter>
+              </defs>
+              <ellipse cx="310" cy="181" rx="204" ry="172" fill="url(#wheel-halo)"/>
+              <circle cx="310" cy="175" r="153" fill="none" stroke="#8eaeac" stroke-opacity=".23" stroke-dasharray="1 9" stroke-width="5"/>
+              <path d="M202 283A153 153 0 1 1 418 283" fill="none" stroke="white" stroke-width="2"/>
+              <path id="direction-arc" d="M310 22A153 153 0 0 1 418 67" fill="none" stroke="#24af98" stroke-width="3" stroke-linecap="round"/>
+              <g id="wheel-rotation" transform="rotate(0 310 175)" filter="url(#wheel-shadow)">
+                <rect x="196" y="113" width="22" height="103" rx="7" fill="url(#metal)" transform="rotate(-16 207 164)"/><rect x="402" y="113" width="22" height="103" rx="7" fill="url(#metal)" transform="rotate(16 413 164)"/>
+                <circle cx="310" cy="175" r="122" fill="none" stroke="#142022" stroke-width="37"/>
+                <circle cx="310" cy="175" r="122" fill="none" stroke="url(#rim)" stroke-width="33"/>
+                <circle cx="310" cy="175" r="135" fill="none" stroke="#718584" stroke-opacity=".35" stroke-width="1.3"/>
+                <circle cx="310" cy="175" r="107" fill="none" stroke="#95a6a3" stroke-opacity=".35" stroke-width="1"/>
+                <path d="M184 158Q189 78 268 51" fill="none" stroke="white" stroke-opacity=".17" stroke-width="2" stroke-linecap="round"/>
+                <path d="M190 189 269 154Q310 140 351 154L430 189 415 209 353 194 329 290 291 290 267 194 205 209Z" fill="url(#metal)" stroke="#5d7473" stroke-width="1"/>
+                <path d="M194 176 261 154Q310 140 359 154L426 176 411 199 354 183Q310 166 266 183L209 199Z" fill="url(#hub)"/>
+                <path d="M310 54v-16" stroke="#9adad2" stroke-width="9"/>
+                <path d="M309 267v-48" stroke="#364d4e" stroke-width="15" stroke-linecap="round"/><path d="M309 259v-30" stroke="#829c9a" stroke-width="2"/>
+                <g class="dpad" transform="translate(239 174)"><path d="M-7-17H7V-7H17V7H7V17H-7V7H-17V-7H-7Z" fill="#0e1f22" stroke="#536766"/><path data-bit="0" d="m0-14-4 5h8Z"/><path data-bit="1" d="m0 14-4-5h8Z"/><path data-bit="2" d="m-14 0 5-4v8Z"/><path data-bit="3" d="m14 0-5-4v8Z"/></g>
+                <g class="wheel-buttons"><g data-bit="15" transform="translate(380 155)"><circle r="9" fill="#d9b738"/><text>Y</text></g><g data-bit="13" transform="translate(397 173)"><circle r="9" fill="#db6f64"/><text>B</text></g><g data-bit="12" transform="translate(380 191)"><circle r="9" fill="#76b98c"/><text>A</text></g><g data-bit="14" transform="translate(363 173)"><circle r="9" fill="#66a7d0"/><text>X</text></g></g>
+                <circle cx="310" cy="174" r="34" fill="#1a2c2e" stroke="#6c8280" stroke-width="2"/><circle cx="310" cy="174" r="27" fill="#c9b449" stroke="#e0d377"/><path d="M292 157Q310 147 328 157L324 168Q310 162 296 168Z" fill="url(#glass-highlight)"/><text x="310" y="180" text-anchor="middle" fill="#273332" font-size="15" font-weight="800" font-style="italic">458</text>
+                <g fill="#8aa49e" font-size="6" text-anchor="middle"><text x="278" y="213">BACK</text><text x="342" y="213">START</text></g><ellipse data-bit="5" cx="278" cy="202" rx="7" ry="4" fill="#233b3e" stroke="#63827f"/><ellipse data-bit="4" cx="342" cy="202" rx="7" ry="4" fill="#233b3e" stroke="#63827f"/>
+                <circle cx="310" cy="221" r="9" fill="#a0b9ac" stroke="#d5e6da"/><path d="m305 216 10 10m0-10-10 10" stroke="#476d57" stroke-width="3"/>
+              </g>
+              <text x="128" y="181" class="wheel-side-label">−135°</text><text x="466" y="181" class="wheel-side-label">+135°</text>
+            </svg>
+            <div class="angle-readout"><strong id="steering-deg">0.0<span>°</span></strong><span>ROTAÇÃO VISUAL</span></div>
+          </div>
+          <div class="axis-footer"><span>ESQUERDA</span><div class="axis-track"><div class="axis-center"></div><div id="axis-marker"></div></div><span>DIREITA</span><code id="steering-normalized">0.000</code></div>
+          <div class="button-feedback"><span class="muted-label">BOTÕES</span><div id="button-pills" class="button-pills"></div><span class="input-dot" id="input-dot"></span></div>
+        </article>
+        <article class="glass pedal-card"><div class="card-heading"><div><span class="section-index">02</span><h2>Pedais</h2></div><span class="subtle-chip">RT / LT</span></div><p class="card-description">Resposta calibrada que chega ao jogo.</p><div class="pedal-pair">
+          <div class="pedal-unit throttle"><div class="pedal-track"><div class="pedal-fill" id="throttle-fill"></div><div class="pedal-grid"></div><div class="pedal-plate" id="throttle-plate"><i></i><i></i><i></i><i></i><i></i><span>RT</span></div></div><strong id="throttle-value">0<span>%</span></strong><span class="pedal-name"><i></i>Acelerador</span></div>
+          <div class="pedal-unit brake"><div class="pedal-track"><div class="pedal-fill" id="brake-fill"></div><div class="pedal-grid"></div><div class="pedal-plate" id="brake-plate"><i></i><i></i><i></i><i></i><i></i><span>LT</span></div></div><strong id="brake-value">0<span>%</span></strong><span class="pedal-name"><i></i>Freio</span></div>
+        </div><div class="pedal-caption"><span class="status-dot"></span><span id="pedal-caption">Aguardando leitura dos eixos</span></div><div class="pedal-raw"><span>VALORES XINPUT</span><code>RT <b id="rt-value">000</b><span>/</span> LT <b id="lt-value">000</b></code></div></article>
+      </div>
+      <div class="bottom-grid"><article class="glass telemetry-card"><div class="telemetry-metric"><span><svg><use href="#i-pulse"/></svg>Processamento</span><strong id="processing-value">—<small>µs</small></strong><small>Tempo de remapeamento em C</small></div><div class="telemetry-metric"><span>Leitura observada</span><strong id="poll-value">—<small>Hz</small></strong><small id="poll-target">Alvo: 250 Hz</small></div><div class="signal-chart"><div><span class="status-dot"></span>DIREÇÃO / ÚLTIMOS SEGUNDOS</div><canvas id="signal-canvas" aria-label="Histórico do eixo de direção"></canvas><div class="chart-baseline">AGORA</div></div></article>
+      <article class="glass output-card"><span class="output-icon"><svg><use href="#i-gamepad"/></svg></span><div><h3>Pronto para o próximo jogo.</h3><p id="output-card-status">Saída Xbox 360 virtual desativada.</p><button id="output-details">Ver conexão XInput <span>↗</span></button></div></article></div>
+      <div id="manual-controls" class="glass manual-controls" hidden><div><h3>Experimente os controles</h3><p>A / D: direção · W: acelerador · S: freio · J / K / U / I: A / B / X / Y</p></div><label>Direção<input id="demo-steering" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Acelerador<input id="demo-throttle" type="range" min="0" max="1" step="0.01" value="0"></label><label>Freio<input id="demo-brake" type="range" min="0" max="1" step="0.01" value="0"></label><details class="demo-extra"><summary>Outros analógicos</summary><label>Esquerdo vertical<input id="demo-ly" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Direito horizontal<input id="demo-rx" type="range" min="-1" max="1" step="0.01" value="0"></label><label>Direito vertical<input id="demo-ry" type="range" min="-1" max="1" step="0.01" value="0"></label></details></div>
+    </section>
+
+    <section id="page-mapping" class="page-panel" hidden>
+      <article class="glass studio-intro"><div><span class="eyebrow">DO SEU CONTROLE PARA O JOGO</span><h2>Escolha o que cada comando faz.</h2><p class="helper">À esquerda está o comando que o jogo recebe. Escolha de onde vem o movimento, ou clique em “Identificar” e mova apenas essa entrada. Uma entrada pode controlar vários comandos.</p></div><button class="secondary-button swap-pedals">Trocar acelerador e freio ⇄</button></article>
+      <div class="studio-section-title"><h2>Volante, pedais e analógicos</h2><span>Entradas contínuas, de 0 a 100%</span></div>
+      <div id="axis-routes" class="route-grid"></div>
+      <details class="glass button-routes" open><summary>Botões e direcional <span>Também aceitam eixos e pedais</span></summary><p class="helper">Um eixo pode acionar um botão ao cruzar o limite escolhido. Use “Lado negativo” para movimentos para a esquerda ou para baixo.</p><div id="mapping-rows" class="button-route-grid"></div></details>
+      <article class="glass profile-card"><div><span class="eyebrow">LEVE SEU AJUSTE COM VOCÊ</span><h2>Seu perfil, em um código.</h2><p class="helper">Salvo automaticamente neste computador. Copie o código para guardar ou compartilhar, ou use um arquivo JSON.</p></div><div class="profile-actions"><button class="secondary-button" id="profile-export">Gerar código</button><button class="secondary-button" id="profile-download">Baixar arquivo</button><button class="secondary-button" id="profile-file-open">Abrir arquivo</button><input type="file" id="profile-file" accept=".json,application/json" hidden></div><label class="field-label" for="profile-code">Código do perfil · cole aqui para importar</label><textarea id="profile-code" rows="3" spellcheck="false" placeholder="BW2.…"></textarea><div class="profile-actions"><button class="secondary-button" id="profile-copy">Copiar código</button><button class="primary-button" id="profile-import">Aplicar perfil</button><button class="secondary-button" id="reset-profile">Restaurar padrão</button></div><p id="profile-feedback" role="status" aria-live="polite"></p><span class="save-status" id="save-status" role="status">Perfil pronto</span></article>
+    </section>
+    <section id="page-calibration" class="page-panel" hidden>
+      <article class="glass studio-intro"><div><span class="eyebrow">SINTA A DIFERENÇA EM TEMPO REAL</span><h2>Um ajuste que você consegue ver.</h2><p class="helper">1. Solte os controles e ajuste a área laranja até cobrir a oscilação. 2. Reduza o fim do curso para precisar de menos movimento. 3. Experimente a curva. A resposta sempre começa em zero e cresce suavemente até 100%.</p><div class="visual-legend"><span><i class="legend-raw"></i>Entrada recebida</span><span><i class="legend-output"></i>Saída para o jogo</span><span><i class="legend-dead"></i>Movimento ignorado</span></div></div><button class="secondary-button swap-pedals">Trocar acelerador e freio ⇄</button></article>
+      <div class="calibration-grid" id="primary-calibration"></div>
+      <details class="glass extra-calibration"><summary>Calibrar os outros analógicos <span>Esquerdo vertical e analógico direito</span></summary><div class="calibration-grid" id="extra-calibration"></div></details>
+    </section>
+
+    <section id="page-diagnostics" class="page-panel" hidden><div class="settings-grid"><article class="glass settings-card"><div class="card-heading"><div><span class="section-index">01</span><h2>A conexão, por dentro</h2></div><button class="icon-button" id="export-diagnostics" aria-label="Exportar diagnóstico"><svg><use href="#i-download"/></svg></button></div><div class="diagnostic-list" id="diagnostic-list"></div><div class="notice diagnostic-notice" id="diagnostic-detail"></div><h3 class="raw-title">Eixos normalizados</h3><div id="raw-axes" class="raw-axes"></div><div class="stick-row"><div><span>ANALÓGICO ESQUERDO</span><div class="stick-pad"><i id="stick-left"></i></div><code id="stick-left-value">0 / 0</code></div><div><span>ANALÓGICO DIREITO</span><div class="stick-pad"><i id="stick-right"></i></div><code id="stick-right-value">0 / 0</code></div></div></article><div><article class="glass settings-card"><h2>Fonte e frequência</h2><label class="field-label" for="source-slot">Entrada XInput física (Windows)</label><select id="source-slot" data-setting="slot"><option value="-1">Automático · subtipo volante</option><option value="0">Slot 0 · seleção manual</option><option value="1">Slot 1 · seleção manual</option><option value="2">Slot 2 · seleção manual</option><option value="3">Slot 3 · seleção manual</option></select><label class="switch-row">Forçar DirectInput<input type="checkbox" data-setting="directinput"><span class="toggle"></span></label><label class="field-label" for="poll-hz">Frequência alvo do loop C</label><select id="poll-hz" data-setting="poll_hz"><option value="125">125 Hz · 8 ms</option><option value="250">250 Hz · 4 ms</option><option value="500">500 Hz · 2 ms</option><option value="1000">1000 Hz · 1 ms</option></select><p class="helper">A frequência USB depende do hardware. Aumentar o alvo não cria novas amostras e pode elevar o uso de CPU.</p><label class="field-label" for="steering-axis">Eixo de direção · DirectInput</label><select id="steering-axis" data-setting="steering_axis"><option value="0">X</option><option value="1">Y</option><option value="2">Z</option><option value="3">RX</option><option value="4">RY</option><option value="5">RZ</option></select><label class="field-label" for="pedal-axis">Eixo combinado de pedais · DirectInput</label><select id="pedal-axis" data-setting="pedal_axis"><option value="0">X</option><option value="1">Y</option><option value="2">Z</option><option value="3">RX</option><option value="4">RY</option><option value="5">RZ</option></select></article><article class="glass settings-card spaced"><h2>Saída para jogos</h2><p id="diagnostic-output" class="helper"></p><p class="helper">Windows: requer ViGEmBus e ViGEmClient.dll x64. O projeto ViGEm foi descontinuado; consulte o README para instalação e limites.</p><a class="text-link" href="https://github.com/nefarius/ViGEmBus/releases" target="_blank" rel="noreferrer">Repositório oficial ViGEmBus ↗</a></article></div></div></section>
+    <footer><div><span class="footer-mark">b</span><span>Feito para manter você no controle.</span></div><span>C11 <i>→</i> XInput <span class="footer-divider">|</span> <span id="footer-platform">Linux preview</span></span></footer>
+  </div>
+</main>
+</div>
+<dialog id="help-dialog"><button class="dialog-close icon-button" id="help-close" aria-label="Fechar">×</button><span class="brand-orb">b<span></span></span><div class="eyebrow">INPUT, RECONNECTED.</div><h2>Uma nova ponte para<br>um velho companheiro.</h2><p>Boreal Wheel lê o volante pelo driver do sistema, ajusta os eixos em C e, no Windows, envia os valores para um Xbox 360 virtual criado pelo ViGEmBus.</p><div class="help-pipeline"><span>Volante</span> → <span>Driver</span> → <b>Boreal Wheel</b> → <span>Jogo</span></div><p>Se o Windows não reconhecer o dispositivo, o adaptador ainda não terá entradas para traduzir. Verifique o driver Xbox 360 no Gerenciador de Dispositivos.</p><p>O modo Demo permite testar o visual no Linux. O tempo exibido mede apenas o remapeamento em C; a latência completa depende de USB, driver, loop e jogo.</p><a href="https://support.thrustmaster.com/en/product/ferrari458italia-en/" target="_blank" rel="noreferrer" class="text-link">Suporte oficial do Ferrari 458 Italia ↗</a><button id="help-done" class="primary-button">Entendi, vamos lá <svg><use href="#i-arrow"/></svg></button></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>

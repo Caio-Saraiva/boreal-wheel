@@ -1,0 +1,14 @@
+/build/
+/build-windows/
+/.toolchain/
+/.deps/
+/dist/
+/profile.ini
+/profile.ini.tmp
+__pycache__/
+
+/build-cmake/
+/.venv/
+*.pyc
+/boreal-wheel-perfil*.json
+/boreal-wheel-diagnostico*.json
