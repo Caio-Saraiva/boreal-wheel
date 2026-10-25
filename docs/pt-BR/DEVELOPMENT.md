@@ -101,7 +101,7 @@ Os avisos de runtime MinGW são obtidos da toolchain local ou dos pacotes do sis
 python3 tests/test_ui.py
 ```
 
-`test.sh` compila o programa e os testes de mapeamento e executa dez testes de integração contra o servidor nativo. Eles verificam curvas, continuidade e renormalização, pedais independentes, troca de fontes, botões, pares digitais, limites, persistência, desconexão, validação de perfis e restrições HTTP.
+`test.sh` compila o programa e os testes de mapeamento e executa onze testes de integração contra o servidor nativo. Eles verificam curvas, continuidade e renormalização, pedais independentes, troca de fontes, botões, pares digitais, limites, persistência, desconexão, validação de perfis e restrições HTTP.
 
 O teste UI abre Firefox headless, interage com o processo C real e testa calibração numérica e por arraste, identificação, medição de repouso, troca dos pedais, temas, importação/exportação e rejeição atômica. Também verifica código/JSON legado após a renomeação e layout em 1440 e 390 pixels. Ele atualiza as capturas em `docs/`.
 
