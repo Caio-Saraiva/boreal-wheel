@@ -1,26 +1,28 @@
-# Referência da API e do formato de perfil
+# API and profile format reference
 
-[Voltar ao README](../README.md) · [Uso dos perfis](PERFIS.md) · [Desenvolvimento](DESENVOLVIMENTO.md)
+**English** | [Português (Brasil)](pt-BR/API.md)
 
-Referência da implementação 0.2.0. Para uso comum, configure pela interface. A API é local, serve o navegador e não oferece descoberta de dispositivos arbitrários nem acesso remoto autenticado.
+[README](../README.md) · [Using profiles](PROFILES.md) · [Development](DEVELOPMENT.md)
 
-## Endereço e requisições
+Reference for application 0.3.0 and profile format version 2. Use the interface for ordinary configuration. This local API serves the browser; it does not provide arbitrary device discovery or authenticated remote access.
 
-Padrão: `http://127.0.0.1:4580`. O processo escuta apenas loopback. `--port N` aceita 1024–65535; use o mesmo número no Host e no Origin.
+## Address and requests
 
-- GET retorna estado, perfil ou recursos estáticos permitidos.
-- POST exige `Origin: http://127.0.0.1:4580` e `Content-Type: application/x-www-form-urlencoded` exatamente.
-- O corpo contém pares de chaves e valores numéricos, ou `action=nome`. Não envie JSON no POST.
-- Host deve ser `127.0.0.1:porta`. `localhost`, origens externas, chaves duplicadas, chunked e comprimentos ambíguos são recusados.
-- A interface limita o texto/arquivo de importação a 40.000 caracteres/bytes respectivamente; o corpo HTTP nativo tem limite declarado de 16.384 bytes e precisa caber no buffer da requisição.
+Default: `http://127.0.0.1:4580`. The process listens only on loopback. `--port N` accepts 1024–65535; use the same port in Host and Origin.
 
-Exemplo: leia o perfil sem alterar nada:
+- GET returns state, profile or explicitly allowed static resources.
+- POST requires exactly `Origin: http://127.0.0.1:4580` and `Content-Type: application/x-www-form-urlencoded`.
+- Bodies contain numeric key/value pairs, or `action=name`. Do not send JSON as the POST body.
+- Host must be `127.0.0.1:port`. `localhost`, external origins, duplicate setting keys, chunked transfer and ambiguous lengths are rejected.
+- The browser limits imported text/files to 40,000 characters/bytes respectively. Native declared HTTP body length is limited to 16,384 bytes and must fit the request buffer.
+
+Read a profile without changing anything:
 
 ```bash
 curl http://127.0.0.1:4580/api/profile
 ```
 
-Exemplo de ajuste parcial (altera o perfil ativo e salva):
+Apply and save a partial setting change:
 
 ```bash
 curl -X POST http://127.0.0.1:4580/api/config \
@@ -29,57 +31,63 @@ curl -X POST http://127.0.0.1:4580/api/config \
   --data 'axis_deadzone_0=0.03&axis_limit_0=0.80'
 ```
 
-Em PowerShell use `curl.exe` e a sintaxe de continuação apropriada, ou envie tudo em uma linha.
+In PowerShell, use `curl.exe` and its appropriate line-continuation syntax, or put the command on one line.
 
-## Rotas
+## Routes
 
-| Método e caminho | Resultado |
+| Method and path | Result |
 | --- | --- |
-| `GET /api/state` | Snapshot de entrada, saída, configuração e diagnóstico |
-| `GET /api/profile` | Envelope JSON com os 87 campos atuais de configuração |
-| `POST /api/config` | Ajuste parcial com validação e gravação antes de substituir o perfil |
-| `POST /api/profile` | Substituição completa; exige exatamente os 87 campos permitidos |
-| `POST /api/action` | Ação de modo, ponte, reset ou captura |
-| `POST /api/demo` | Estado sintético manual: steering/ly/rx/ry de −1 a 1; throttle/brake de 0 a 1; buttons de 0 a 65535 inteiro |
-| `GET /`, `/app.js`, `/style.css`, `/favicon.svg` | Interface e recursos locais |
+| `GET /api/state` | Input, output, settings and diagnostics snapshot |
+| `GET /api/profile` | JSON envelope containing the 87 current configuration fields |
+| `POST /api/config` | Partial update, validated and saved before replacing settings |
+| `POST /api/profile` | Complete replacement; requires exactly the 87 allowed fields |
+| `POST /api/action` | Mode, bridge, reset or capture action |
+| `POST /api/demo` | Manual synthetic state: steering/ly/rx/ry −1 to 1; throttle/brake 0 to 1; integer buttons 0 to 65535 |
+| `GET /`, `/app.js`, `/i18n.js`, `/locales.js`, `/style.css`, `/favicon.svg` | Local interface resources |
 
-`/api/demo` define um snapshot completo de entrada manual: campos omitidos voltam a zero. Ele só alimenta a leitura quando Demo está em modo manual; não cria saída para o jogo.
+`/api/demo` replaces a complete manual-input snapshot: omitted fields return to zero. It feeds input only in manual Demo mode and cannot create game output. The native parser also accepts `raw_0`–`raw_5`, but the Demo worker regenerates the raw-axis snapshot from its normalized controls; these keys do not provide persistent independent raw-axis simulation.
 
-POST válido retorna `{"ok":true}`. Erros retornam texto: 400 para ajuste/ação inválidos ou falha de gravação, 403 para Host/origem/tipo inadequados, 404 para caminhos sem rota. Não há endpoint para ler arquivos arbitrários do disco ou para servir os guias Markdown.
+Successful POST returns `{"ok":true}`. Errors are text: 400 for invalid settings/actions or save failure, 403 for invalid Host/origin/type, and 404 for unrecognized routes. There is no arbitrary disk-file endpoint or Markdown documentation server.
 
-### Ações
+### Actions
 
-Envie `action=nome` para `/api/action`:
+Send `action=name` to `/api/action`:
 
-| Nome | Efeito |
+| Name | Effect |
 | --- | --- |
-| `physical` | Seleciona hardware e desliga a solicitação da ponte |
-| `demo` | Seleciona Demo automática e desliga a solicitação da ponte |
-| `manual` | Seleciona interação manual da Demo e zera o estado sintético |
-| `auto` | Retoma a animação automática da Demo |
-| `start` / `stop` | Solicita ativação/desativação da ponte; start é recusado na Demo |
-| `reset` | Salva os padrões e substitui o perfil; não muda o estado da ponte |
-| `center` ou `center_0` até `center_3` | Captura o centro do eixo selecionado; exige entrada disponível e centro dentro de ±0,5 |
-| `limit_0` até `limit_5` | Captura a magnitude atual como limite; exige entrada, mínimo 0,05 e separação de 0,02 da zona morta |
+| `physical` | Select hardware and clear the bridge request |
+| `demo` | Select automatic Demo and clear the bridge request |
+| `manual` | Select manual Demo input and reset synthetic state |
+| `auto` | Resume automatic Demo animation |
+| `start` / `stop` | Request bridge activation/deactivation; start is rejected in Demo |
+| `reset` | Save and apply defaults; keep current bridge state |
+| `center` or `center_0` through `center_3` | Capture selected-axis center; requires input and center within ±0.5 |
+| `limit_0` through `limit_5` | Capture current magnitude as full travel; requires input, at least 0.05, and 0.02 separation from deadzone |
 
-“Medir repouso” e “Identificar” são operações da interface que observam snapshots e enviam ajustes; não são endpoints dedicados.
+**Measure rest** and **Identify** are browser operations that observe snapshots and submit settings, rather than dedicated endpoints.
 
-### Snapshot de estado
+### State snapshot
 
-`/api/state` contém:
+`/api/state` contains:
 
-- `demo`, `demo_auto`, `connected`, `physical_connected`, `usb_present`, `combined_pedals`: indicadores 0/1. Demo pode ter connected=1 sem hardware; physical_connected diferencia os casos.
-- `output_requested` e `output_active`: solicitação e estado efetivo da saída, que podem diferir sem entrada/driver.
-- `platform`, `name`, `backend`, `detail`, `output_status`: identificação e mensagens.
-- `map_us`, `observed_hz`, `packets`: duração da transformação, frequência observada do loop e contador de iterações; packets não garante pacotes USB novos.
-- `raw`: direção, pedais, LY/RX/RY, máscara de botões e array de seis eixos do backend.
-- `input`: seis entradas selecionadas após centro/inversão e antes da curva/zona morta.
-- `report`: LX/LY/RX/RY inteiros de −32768 a 32767, LT/RT de 0 a 255 e máscara de botões.
-- `config`: configuração atual, incluindo aliases legados para compatibilidade. Não copie todos esses aliases para `/api/profile`: use `GET /api/profile` para o conjunto exportável.
+- `demo`, `demo_auto`, `connected`, `physical_connected`, `usb_present`, `combined_pedals`: 0/1 indicators. Demo can report connected=1 without hardware; physical_connected distinguishes this.
+- `output_requested` and `output_active`: requested and actual output state, which can differ without input/a driver.
+- `platform`, `name`, `backend`, `detail`, `output_status`: identification and messages.
+- `map_us`, `observed_hz`, `packets`: transformation duration, observed loop rate and iteration count. packets does not guarantee new USB packets.
+- `raw`: steering, pedals, LY/RX/RY, button bitmask and six backend axes.
+- `input`: six selected inputs after center/inversion and before curve/deadzone.
+- `report`: integer LX/LY/RX/RY from −32768 to 32767, LT/RT from 0 to 255 and a button bitmask.
+- `config`: current configuration, including legacy compatibility aliases. Do not POST all aliases to `/api/profile`; obtain the exportable set with `GET /api/profile`.
 
-## Envelope exportado
+### Language contract
 
-O [exemplo completo](../examples/default-profile.json) contém todos os padrões. A forma geral é:
+API routes, JSON keys, configuration identifiers, numeric values, action names and profile format are **language-independent**. Native human-readable messages default to English. Start with `--lang pt-BR` or `BW_LANG=pt-BR` to use Portuguese messages; explicit `--lang` overrides the environment.
+
+The interface translates supported messages to its separately selected language. Human-readable strings are diagnostic text, not stable programmatic identifiers; automate using fields such as `output_active` rather than matching translated sentences. No language field is added to the 87-field wheel profile.
+
+## Exported envelope
+
+The [complete example](../examples/default-profile.json) contains all defaults. General shape:
 
 ```json
 {
@@ -92,76 +100,76 @@ O [exemplo completo](../examples/default-profile.json) contém todos os padrões
 }
 ```
 
-**O trecho acima é ilustrativo e incompleto; não é importável.** `settings` deve conter exatamente os 87 campos do perfil completo: cinco globais, 40 de eixos e 42 de botões. Valores são números JSON finitos, com inteiro onde indicado. Não acrescente comentários ao JSON.
+**This snippet is illustrative and incomplete; it cannot be imported.** `settings` must have exactly 87 fields: five global, 40 axis and 42 button fields. Values are finite JSON numbers, with integers where required. JSON does not allow comments.
 
-Código portátil: `BW2.` + Base64 do texto JSON. A interface também importa prefixo legado `PB2.` e formato `project-b` com versão 2. Ela valida o envelope e envia apenas `settings` como pares de formulário ao núcleo. O núcleo valida campos, faixas e consistência antes de gravar/substituir; uma importação inválida preserva o perfil anterior.
+Portable code: `BW2.` followed by Base64 of the JSON text. The interface also accepts legacy `PB2.` codes and `project-b` format with version 2. It validates the envelope and sends only `settings` as form pairs to the core. Native field, range and consistency validation occurs before saving/replacing; invalid imports preserve the previous profile.
 
-### Campos globais
+### Global fields
 
-| Campo | Padrão | Valores |
+| Field | Default | Values |
 | --- | --- | --- |
-| `poll_hz` | 250 | 125, 250, 500 ou 1000 |
-| `slot` | −1 | −1 automático ou 0–3 físico XInput |
-| `directinput` | 0 | 0 automático/XInput; 1 força DI |
-| `steering_axis` | 0 | 0–5: X, Y, Z, RX, RY, RZ em DI |
-| `pedal_axis` | 2 | 0–5: eixo de pedais combinados em DI |
+| `poll_hz` | 250 | 125, 250, 500 or 1000 |
+| `slot` | −1 | −1 automatic or physical XInput 0–3 |
+| `directinput` | 0 | 0 automatic/XInput; 1 force DI |
+| `steering_axis` | 0 | 0–5: X, Y, Z, RX, RY, RZ in DI |
+| `pedal_axis` | 2 | 0–5: combined pedal axis in DI |
 
-### Campos de eixo
+### Axis fields
 
-Índice `i`: **0=LX/direção, 1=LY, 2=RX, 3=RY, 4=RT/acelerador, 5=LT/freio**.
+Index `i`: **0=LX/steering, 1=LY, 2=RX, 3=RY, 4=RT/throttle, 5=LT/brake**.
 
-| Campo para cada i | Padrão | Limites |
+| Field for each i | Default | Range |
 | --- | --- | --- |
-| `axis_source_i` | i | Fonte −1 ou válida na tabela abaixo |
+| `axis_source_i` | i | −1 or a valid source below |
 | `axis_invert_i` | 0 | 0/1 |
-| `axis_deadzone_i` | 0,02 nos analógicos; 0,01 nos pedais | 0–0,6 |
-| `axis_limit_i` | 1 | 0,05–1 |
-| `axis_gamma_i` | 1 | 0,2–3 |
-| `axis_center_i` | 0 | −0,5–0,5 |
-| `axis_negative_i` | −1 | Somente i=0–3; fonte −1 ou válida |
+| `axis_deadzone_i` | 0.02 for sticks; 0.01 for pedals | 0–0.6 |
+| `axis_limit_i` | 1 | 0.05–1 |
+| `axis_gamma_i` | 1 | 0.2–3 |
+| `axis_center_i` | 0 | −0.5–0.5 |
+| `axis_negative_i` | −1 | Only i=0–3; −1 or valid source |
 
-`axis_limit_i − axis_deadzone_i` precisa ser pelo menos 0,02 (com tolerância numérica interna). Não envie `axis_negative_4` ou `_5`. Uma saída com source −1 permanece neutra inclusive se invertida.
+`axis_limit_i − axis_deadzone_i` must be at least 0.02, subject to internal floating-point tolerance. Do not send `axis_negative_4` or `_5`. An output with source −1 stays neutral even if inverted.
 
-### Fontes
+### Sources
 
-| ID | Entrada |
+| ID | Input |
 | --- | --- |
-| −1 | Desativado |
-| 0, 1, 2, 3 | Direção/LX, LY, RX, RY normalizados |
-| 4, 5 | Acelerador/RT e freio/LT normalizados |
-| 6–15 | D-pad cima, baixo, esquerda, direita, Start, Back, LS, RS, LB, RB |
-| 16, 17 | Reservados; inválidos como fonte |
+| −1 | Disabled |
+| 0, 1, 2, 3 | Normalized steering/LX, LY, RX, RY |
+| 4, 5 | Normalized throttle/RT and brake/LT |
+| 6–15 | D-pad up, down, left, right, Start, Back, LS, RS, LB, RB |
+| 16, 17 | Reserved; invalid as sources |
 | 18–21 | A, B, X, Y |
-| 22–27 | Seis eixos brutos do backend, na ordem do array raw.axes |
+| 22–27 | Six raw backend axes in raw.axes order |
 
-As fontes brutas dependem do backend; “bruto” aqui é a leitura normalizada exposta pelo driver, não dados USB em bytes. Os eixos/controles ausentes no volante não passam a existir por serem selecionáveis.
+Raw axes depend on the backend. Here “raw” means normalized driver readings, not USB bytes. Selecting a listed control does not add sensors absent from the wheel.
 
-### Campos de botão
+### Button fields
 
-O índice `b` corresponde ao bit XInput. São válidos 0–9 e 12–15. Bits 10 e 11 são reservados e não entram no perfil.
+Index `b` is the XInput bit. Valid indices are 0–9 and 12–15. Bits 10 and 11 are reserved and excluded from the profile.
 
-| Bit b | Saída |
+| Bit b | Output |
 | --- | --- |
-| 0, 1, 2, 3 | D-pad cima, baixo, esquerda, direita |
+| 0, 1, 2, 3 | D-pad up, down, left, right |
 | 4, 5 | Start, Back |
 | 6, 7 | LS, RS |
 | 8, 9 | LB, RB |
 | 12, 13, 14, 15 | A, B, X, Y |
 
-Para cada bit válido:
+For every valid bit:
 
-| Campo | Padrão | Valores |
+| Field | Default | Values |
 | --- | --- | --- |
-| `button_source_b` | 6+b | Fonte −1 ou válida |
-| `button_direction_b` | 1 | −1 ou 1 |
-| `button_threshold_b` | 0,5 | 0,01–1 |
+| `button_source_b` | 6+b | −1 or valid source |
+| `button_direction_b` | 1 | −1 or 1 |
+| `button_threshold_b` | 0.5 | 0.01–1 |
 
-O botão ativa quando `fonte × direction >= threshold`. source −1 fica desligado. O limiar é aplicado à fonte original e não depende da calibração de outro eixo de saída.
+A button activates when `source × direction >= threshold`. source −1 stays off. Thresholds use the original source, independently of another output axis's calibration.
 
-## Armazenamento INI e compatibilidade
+## INI storage and compatibility
 
-`profile.ini` usa `chave=valor`, sem envelope. Escrita temporária e substituição reduzem o risco de um perfil parcial. O caminho é relativo ao diretório de trabalho; veja [locais dos perfis](PERFIS.md).
+`profile.ini` uses `key=value` without an envelope. Temporary-file writing and replacement reduce partial-profile risk. Paths are relative to the working directory; see [profile locations](PROFILES.md).
 
-O leitor aceita aliases antigos como `deadzone`, `gamma`, `center`, `pedal_deadzone`, `invert_steering`, `invert_throttle`, `invert_brake` e `button_b`. Esses aliases existem para migração de INI e ajustes parciais; o perfil completo exportável usa apenas os campos atuais. A leitura do INI ignora linhas que não entende e só aplica o candidato se os limites entre eixos forem consistentes; ela não é o mesmo contrato estrito da importação pela interface.
+The reader accepts legacy aliases including `deadzone`, `gamma`, `center`, `pedal_deadzone`, `invert_steering`, `invert_throttle`, `invert_brake` and `button_b`. They support INI migration and partial updates; complete exportable profiles use only current fields. INI loading ignores unrecognized lines and applies the candidate only if axis-limit consistency holds. It is not the strict interface-import contract.
 
-Tema, regras do HidHide e solicitação de ponte não pertencem ao formato de perfil. Não adicione credenciais ou configurações pessoais ao repositório.
+Theme, language, HidHide rules and the bridge request are outside the profile format. Keep credentials and personal configuration out of the repository.

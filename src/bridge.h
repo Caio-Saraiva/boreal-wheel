@@ -12,7 +12,7 @@ typedef struct {
     float axes[BW_AXES];
     uint16_t buttons;
     int connected, usb_present, combined_pedals;
-    char name[160], backend[48], detail[256];
+    char name[160], backend[48], detail[512];
 } BWInput;
 typedef struct {
     int source, negative, invert;
@@ -33,6 +33,8 @@ float bw_axis_map(float value, const BWAxisConfig *axis);
 float bw_steering(float value, const BWConfig *c);
 void bw_map(const BWInput *in, const BWConfig *c, BWReport *out);
 int bw_setting(BWConfig *c, const char *key, const char *value);
+int bw_set_language(const char *language);
+const char *bw_text(const char *english);
 double bw_now(void);
 void bw_sleep(double seconds);
 void bw_input_read(BWInput *in, const BWConfig *c);

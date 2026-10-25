@@ -79,7 +79,7 @@ class BridgeIntegration(unittest.TestCase):
         self.assertEqual(s['physical_connected'],0)
         self.assertEqual(s['output_active'],0)
     def test_06_assets_have_types_and_csp(self):
-        for path,typ in [('/','text/html'),('/style.css','text/css'),('/app.js','text/javascript'),('/favicon.svg','image/svg+xml')]:
+        for path,typ in [('/','text/html'),('/style.css','text/css'),('/app.js','text/javascript'),('/i18n.js','text/javascript'),('/locales.js','text/javascript'),('/favicon.svg','image/svg+xml')]:
             with urllib.request.urlopen(self.base+path) as r:
                 self.assertTrue(r.headers['Content-Type'].startswith(typ)); self.assertIn("frame-ancestors 'none'",r.headers['Content-Security-Policy']);self.assertGreater(len(r.read()),100)
     def test_07_center_validation(self):
@@ -158,4 +158,30 @@ class BridgeIntegration(unittest.TestCase):
         self.post('demo',{});self.wait_state(lambda s:s['raw']['brake']==0)
         with self.assertRaises(urllib.error.HTTPError) as error:self.post('action',{'action':'limit_4'})
         error.exception.close();self.assertEqual(self.get('/api/state')['config'],before)
+    def test_11_process_language_and_invalid_language(self):
+        result=subprocess.run([str(BINARY),'--lang','invalid'],capture_output=True,text=True,timeout=3)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('Invalid language',result.stderr)
+        localized=subprocess.run([str(BINARY),'--port','999','--lang','pt-BR'],capture_output=True,text=True,timeout=3)
+        self.assertIn('Porta inválida',localized.stderr)
+        override=subprocess.run([str(BINARY),'--port','999','--lang','en'],env={**os.environ,'BW_LANG':'pt-BR'},capture_output=True,text=True,timeout=3)
+        self.assertIn('Invalid port',override.stderr)
+        with tempfile.TemporaryDirectory(prefix='boreal-wheel-language-') as directory:
+            with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
+            base=f'http://127.0.0.1:{port}'
+            process=subprocess.Popen([str(BINARY),'--demo','--lang','pt-BR','--port',str(port)],cwd=directory,stdout=subprocess.DEVNULL)
+            try:
+                for _ in range(100):
+                    try:
+                        with urllib.request.urlopen(base+'/api/state',timeout=1) as response:state=json.load(response)
+                        if state['backend']:break
+                    except OSError:pass
+                    time.sleep(.02)
+                self.assertTrue(state['backend'].startswith('Demonstração'))
+                self.assertEqual(state['output_status'],'Demonstração · saída para jogos bloqueada')
+                req=urllib.request.Request(base+'/api/config',data=b'poll_hz=999',headers={'Origin':base,'Content-Type':'application/x-www-form-urlencoded'})
+                with self.assertRaises(urllib.error.HTTPError) as error:urllib.request.urlopen(req)
+                self.assertEqual(error.exception.read().decode(),'Ajuste inválido')
+                error.exception.close()
+            finally:process.terminate();process.wait(timeout=5)
 if __name__=='__main__':unittest.main(verbosity=2)

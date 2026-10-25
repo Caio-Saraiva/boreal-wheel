@@ -16,7 +16,7 @@ def free_port():
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));return sock.getsockname()[1]
 def request(url,data=None,method=None):
     with urllib.request.urlopen(urllib.request.Request(url,data=json.dumps(data).encode() if data is not None else None,headers={'Content-Type':'application/json'},method=method),timeout=30) as response:return json.load(response)['value']
-def run():
+def run(language="en"):
     driver_port,core_port=free_port(),free_port();driver_base=f'http://127.0.0.1:{driver_port}';core_base=f'http://127.0.0.1:{core_port}';session=None
     def api(path='state',values=None):
         req=urllib.request.Request(core_base+'/api/'+path,data=urllib.parse.urlencode(values).encode() if values is not None else None,headers={'Content-Type':'application/x-www-form-urlencoded','Origin':core_base})
@@ -29,13 +29,13 @@ def run():
         raise AssertionError('Native state did not reach expected result: '+json.dumps(state))
     with tempfile.TemporaryDirectory(prefix='boreal-wheel-ui-') as directory,open(ROOT/'build/ui-test.log','w') as log:
         shutil.copytree(ROOT/'web',Path(directory)/'web')
-        core=subprocess.Popen([str(ROOT/'build/boreal-wheel'),'--demo','--port',str(core_port)],cwd=directory,stdout=log,stderr=log)
+        core=subprocess.Popen([str(ROOT/'build/boreal-wheel'),'--demo','--lang',language,'--port',str(core_port)],cwd=directory,stdout=log,stderr=log)
         driver=subprocess.Popen([os.environ.get('GECKODRIVER','geckodriver'),'--port',str(driver_port),'--host','127.0.0.1'],stdout=log,stderr=log)
         try:
             for _ in range(100):
                 try:request(driver_base+'/status');break
                 except OSError:time.sleep(.05)
-            options={'args':['-headless'],'prefs':{'ui.prefersReducedMotion':1}}
+            options={'args':['-headless'],'prefs':{'ui.prefersReducedMotion':1,'intl.accept_languages':'pt-BR,pt'}}
             if os.environ.get('FIREFOX_BINARY'):options['binary']=os.environ['FIREFOX_BINARY']
             session=request(driver_base+'/session',{'capabilities':{'alwaysMatch':{'browserName':'firefox','moz:firefoxOptions':options}}})['sessionId'];base=driver_base+'/session/'+session
             def cmd(path,data=None):return request(base+path,data)
@@ -50,13 +50,37 @@ def run():
             def setting(key,value):
                 js('const el=document.querySelector(`[data-setting="${arguments[0]}"][type=number]`)||document.querySelector(`[data-setting="${arguments[0]}"]`);el.value=arguments[1];el.dispatchEvent(new Event("change",{bubbles:true}));',key,str(value))
             def screenshot(name):
-                (ROOT/'docs'/name).write_bytes(base64.b64decode(cmd('/screenshot')))
+                (ROOT/'docs'/(('pt-BR/images/'+name) if language=='pt-BR' else name)).write_bytes(base64.b64decode(cmd('/screenshot')))
             cmd('/window/rect',{'width':1440,'height':1120});cmd('/url',{'url':core_base})
-            wait('return document.querySelector("#device-badge").textContent.includes("Demonstração")')
+            wait('return document.querySelector("#device-badge").textContent.includes("Demonstration")')
             assert js('return document.title').startswith('Boreal Wheel')
+            assert js('return document.documentElement.lang')=='en', 'English must be the default even for a Portuguese browser'
+            assert js('return Object.entries(BW_MESSAGES).filter(([en])=>!en.includes("{")).every(([en,pt])=>BWI18n.t(en,"pt-BR")===pt && BWI18n.t(pt,"en")===en)')
+            assert js('return BWI18n.t("Demonstração automática","en")')=='Demonstration automatic'
+            assert js('return BWI18n.t("Xbox 360 virtual ativo · slot 2","en")')=='Virtual Xbox 360 active · slot 2'
+            assert js('return BWI18n.t("Virtual Xbox 360 active · slot 2","pt-BR")')=='Xbox 360 virtual ativo · slot 2'
+
+            def choose_language(value):
+                js('const el=document.querySelector("#language-select");el.value=arguments[0];el.dispatchEvent(new Event("change",{bubbles:true}));',value)
+                wait('return document.documentElement.lang==='+json.dumps(value))
+            before_language=api('profile')
+            js('document.querySelector("#profile-code").value="BW2.keep-this-user-input"')
+            choose_language('pt-BR')
+            assert js('return document.querySelector("[data-page=mapping]").textContent')=='Mapeamento'
+            assert js('return document.querySelector("#export-diagnostics").getAttribute("aria-label")')=='Exportar diagnóstico'
+            assert js('return document.querySelector("#language-select").getAttribute("aria-label")')=='Idioma'
+            assert js('return document.querySelector("#diagnostic-detail").textContent').startswith('Entradas sintéticas')
+            assert js('return document.querySelector("#profile-code").value')=='BW2.keep-this-user-input'
+            assert api('profile')==before_language
+            choose_language('en')
+            assert js('return document.querySelector("[data-page=mapping]").textContent')=='Mapping'
+            choose_language(language)
+            words={'demo':'Demonstration','waiting':'Waiting','sent':'sent','applied':'applied'} if language=='en' else {'demo':'Demonstração','waiting':'Aguardando','sent':'enviado','applied':'aplicado'}
+
             # The rename preserves the browser preference from older installations.
             js('localStorage.removeItem("boreal-wheel-theme");localStorage.setItem("project-b-theme","dark")')
-            cmd('/refresh',{});wait('return document.querySelector("#device-badge").textContent.includes("Demonstração")')
+            cmd('/refresh',{});wait('return document.querySelector("#device-badge").textContent.includes('+json.dumps(words["demo"])+')')
+            assert js('return document.documentElement.lang')==language
             assert js('return document.documentElement.dataset.theme')=='dark'
             click('#theme-toggle')
             assert js('return document.querySelectorAll(".mapping-row").length')==14
@@ -79,7 +103,7 @@ def run():
             setting('button_source_12',18);wait_api(lambda s:s['config']['button_source_12']==18 and s['config']['button_direction_12']==1)
             setting('button_source_12',2);setting('button_direction_12',-1)
             api('demo',{});wait_api(lambda s:s['raw']['rx']==0)
-            click('#source-axis_source_2 + button');wait('return document.querySelector("#source-axis_source_2 + button").textContent.includes("Aguardando")');time.sleep(.12);api('demo',{'ry':.8});wait_api(lambda s:s['config']['axis_source_2']==3)
+            click('#source-axis_source_2 + button');wait('return document.querySelector("#source-axis_source_2 + button").textContent.includes('+json.dumps(words["waiting"])+')');time.sleep(.12);api('demo',{'ry':.8});wait_api(lambda s:s['config']['axis_source_2']==3)
             # Digital pair controls both directions of a stick.
             setting('axis_source_0',15);setting('axis_negative_0',14)
             api('demo',{'buttons':256});wait_api(lambda s:s['report']['lx']==-32768)
@@ -88,7 +112,7 @@ def run():
             click('[data-page="calibration"]');setting('axis_deadzone_0',10);setting('axis_limit_0',50)
             api('demo',{'steering':.3,'brake':.5});s=wait_api(lambda s:s['config']['axis_limit_0']==.5 and s['config']['axis_deadzone_0']==.1 and abs(s['report']['lx']/32767-.5)<.001)
             assert abs(s['report']['lx']/32767-.5)<.001
-            wait('return document.querySelector("#cal-gate-0").textContent.includes("enviado")')
+            wait('return document.querySelector("#cal-gate-0").textContent.includes('+json.dumps(words["sent"])+')')
             # Drag the actual moon deadzone handle using WebDriver pointer input.
             js('document.querySelector("#cal-canvas-0").scrollIntoView({block:"center"})')
             points=js('const r=document.querySelector("#cal-canvas-0").getBoundingClientRect(),radius=Math.min(110,r.width*.43);return [.1,.14,.18].map(v=>({x:Math.round(r.left+r.width/2+Math.sin(v*Math.PI/2)*radius),y:Math.round(r.top+145-Math.cos(v*Math.PI/2)*radius)}));')
@@ -117,7 +141,8 @@ def run():
             assert js('return getComputedStyle(document.body).backgroundColor')=='rgb(17, 36, 42)'
             api('demo',{'steering':.3,'brake':.68,'throttle':.12});wait_api(lambda s:s['raw']['steering']==.3);time.sleep(.08)
             js('window.scrollTo(0,0)');screenshot('calibration-dark.png')
-            cmd('/refresh',{});wait('return document.querySelector("#device-badge").textContent.includes("Demonstração")')
+            cmd('/refresh',{});wait('return document.querySelector("#device-badge").textContent.includes('+json.dumps(words["demo"])+')')
+            assert js('return document.documentElement.lang')==language
             assert js('return document.documentElement.dataset.theme')=='dark'
             # Export code, reject corruption without touching settings, import roundtrip.
             click('[data-page="mapping"]');click('#profile-export')
@@ -129,7 +154,7 @@ def run():
             wait('return document.querySelector("#profile-feedback").dataset.error==="true"')
             assert api('profile')==before
             js('document.querySelector("#profile-code").value=arguments[0]',code);click('#profile-import')
-            wait('return document.querySelector("#profile-feedback").textContent.includes("aplicado")');assert api('profile')==profile
+            wait('return document.querySelector("#profile-feedback").textContent.includes('+json.dumps(words["applied"])+')');assert api('profile')==profile
             # Existing PB2 codes and JSON files remain importable after the rename.
             legacy={**profile,'format':'project-b'}
             legacy_code='PB2.'+base64.b64encode(json.dumps(legacy).encode()).decode()
@@ -158,9 +183,9 @@ def run():
                 if width==390:
                     click('[data-page="calibration"]');js('window.scrollTo(0,0)');screenshot('calibration-mobile.png')
             click('[data-page="overview"]');js('window.scrollTo(0,0)');screenshot('preview-mobile.png')
-            click('#physical-mode');wait('return document.querySelector("#device-badge").textContent.includes("Aguardando")')
+            click('#physical-mode');wait('return document.querySelector("#device-badge").textContent.includes('+json.dumps(words["waiting"])+')')
             core.terminate();core.wait(timeout=5);wait('return !document.querySelector("#connection-error").hidden');assert js('return document.querySelector("#bridge-toggle").disabled')
-            print('Firefox: all sources/outputs, pedal swap, axis-to-button threshold, input learning, digital pairs, numeric calibration, moon/bar drags, measured deadzone, center capture, profile/code/file roundtrip, invalid import atomicity, persistent dark theme, responsive layout and offline state passed.')
+            print(language+': Firefox: all sources/outputs, pedal swap, axis-to-button threshold, input learning, digital pairs, numeric calibration, moon/bar drags, measured deadzone, center capture, profile/code/file roundtrip, invalid import atomicity, persistent dark theme, responsive layout and offline state passed.')
         finally:
             if session:
                 try:request(driver_base+'/session/'+session,method='DELETE')
@@ -169,4 +194,5 @@ def run():
                 if process.poll() is None:process.terminate()
                 try:process.wait(timeout=5)
                 except subprocess.TimeoutExpired:process.kill()
-if __name__=='__main__':run()
+if __name__=='__main__':
+    for language in ['en','pt-BR']:run(language)

@@ -1,74 +1,84 @@
 # Boreal Wheel
 
-**Seu volante de volta à pista.** Ponte de entrada escrita em C11 para usar o **Thrustmaster Ferrari 458 Italia de Xbox 360** como um **controle Xbox 360 virtual / XInput** em jogos no Windows. Inclui mapeamento de comandos, calibração visual, perfis portáteis e interface local com temas claro e escuro.
+**English** | [Português (Brasil)](README.pt-BR.md)
 
-Criado por **CaioSaraiva**. O nome Boreal Wheel combina a referência ao volante com o visual de vidro e luz da interface.
+**Your wheel, back on track.** A C11 input bridge that lets you use the **Thrustmaster Ferrari 458 Italia for Xbox 360** as a **virtual Xbox 360 / XInput controller** in Windows games. Includes control mapping, visual calibration, portable profiles and a local interface with light and dark themes.
 
-![Boreal Wheel em modo demonstração](docs/preview-desktop.png)
+Created by **CaioSaraiva**. Boreal Wheel combines a reference to the steering wheel with the interface's glass and light aesthetic.
 
-## Baixar e começar no Windows
+![Boreal Wheel in demonstration mode](docs/preview-desktop.png)
 
-1. Baixe `boreal-wheel-windows-x64.zip` em [Releases](https://github.com/Caio-Saraiva/boreal-wheel/releases/latest) e **extraia tudo** para uma pasta fixa, por exemplo `C:\BorealWheel`.
-2. Conecte o volante e confira a leitura no Windows com `Win+R` → `joy.cpl`.
-3. Instale o [ViGEmBus oficial](https://github.com/nefarius/ViGEmBus/releases/tag/v1.22.0) e reinicie se solicitado. A DLL do pacote não substitui esse driver.
-4. Execute `run.cmd` e abra **http://127.0.0.1:4580**. Selecione **Dispositivo**, confira os movimentos e ajuste os comandos.
-5. Configure o [HidHide](docs/INSTALACAO.md#configurar-o-hidhide) quando o jogo também detectar o volante físico: permita `boreal-wheel.exe` e oculte somente o dispositivo físico.
-6. Clique **Ativar ponte**. Com a indicação **Xbox 360 virtual ativo**, abra o jogo como **controle/gamepad**: direção em LX, acelerador em RT e freio em LT.
+## Download and start on Windows
 
-Mantenha o terminal aberto enquanto joga. Fechar a aba não encerra a ponte. Para parar, clique **Desativar ponte** ou encerre o processo com `Ctrl+C`. `run-demo.cmd` permite explorar sem hardware e bloqueia a saída para jogos.
+1. Download `boreal-wheel-windows-x64.zip` from [Releases](https://github.com/Caio-Saraiva/boreal-wheel/releases/latest) and **extract everything** to a permanent folder, such as `C:\BorealWheel`.
+2. Connect the wheel and check physical input with `Win+R` → `joy.cpl`.
+3. Install the [official ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases/tag/v1.22.0) and restart if requested. The bundled DLL does not replace this driver.
+4. Run `run.cmd` and open **http://127.0.0.1:4580**. Select **Device**, check movement and adjust your controls.
+5. Configure [HidHide](docs/INSTALLATION.md#configure-hidhide) if the game also detects the physical wheel: allow `boreal-wheel.exe` and hide only the physical device.
+6. Click **Enable bridge**. When **Virtual Xbox 360 active** appears, open the game in **controller/gamepad** mode: steering on LX, throttle on RT and brake on LT.
 
-## Documentação
+Keep the terminal open while playing. Closing the browser tab does not stop the bridge. Click **Disable bridge** or press `Ctrl+C` in the terminal to stop it. `run-demo.cmd` lets you explore without hardware and blocks game output.
 
-| Quero… | Guia |
+## Languages
+
+**English is the default.** Use the **Language** selector in the top bar to switch to **Português (Brasil)**. Your choice is remembered by the browser, separately from the wheel profile. Switching languages updates the interface without changing controls, calibration, profile codes or the active bridge.
+
+The native process also defaults to English. For Portuguese terminal/API messages, run `boreal-wheel.exe --lang pt-BR`, use `run-pt-BR.cmd`, or pass `-Language pt-BR` to the PowerShell scripts. The browser selector translates supported diagnostic messages in either process language.
+
+## Documentation
+
+| I want to… | English | Português (Brasil) |
+| --- | --- | --- |
+| Install with ViGEmBus and HidHide | [Installation](docs/INSTALLATION.md) | [Instalação](docs/pt-BR/INSTALLATION.md) |
+| Understand every screen and configure controls | [Configuration and calibration](docs/CONFIGURATION.md) | [Configuração e calibração](docs/pt-BR/CONFIGURATION.md) |
+| Export, import, share, restore or migrate settings | [Profiles and backups](docs/PROFILES.md) | [Perfis e backups](docs/pt-BR/PROFILES.md) |
+| Fix missing input, double input or pedal issues | [Troubleshooting](docs/TROUBLESHOOTING.md) | [Solução de problemas](docs/pt-BR/TROUBLESHOOTING.md) |
+| Build, test, package or run on Linux | [Development](docs/DEVELOPMENT.md) | [Desenvolvimento](docs/pt-BR/DEVELOPMENT.md) |
+| Automate or inspect the configuration format | [API and profile reference](docs/API.md) | [API e formato do perfil](docs/pt-BR/API.md) |
+| Check sources and licenses | [References](docs/REFERENCES.md) · [Third-party notices](THIRD_PARTY_NOTICES.md) | [Referências](docs/pt-BR/REFERENCES.md) · [Avisos](docs/pt-BR/THIRD_PARTY_NOTICES.md) |
+
+## Features and compatibility
+
+- Six analog outputs: LX, LY, RX, RY, RT and LT; 14 buttons/D-pad directions. Available physical axes and buttons can drive any supported output.
+- Input identification by movement, pedal swapping and two buttons for the opposite directions of a stick.
+- Per-axis deadzone, full-travel limit/sensitivity, response curve, inversion and center; graphs and controls for mouse, touch, numbers and sliders.
+- Automatic `profile.ini` saving, JSON or `BW2.` exports, legacy `PB2.` imports and exportable diagnostics.
+- Local HTML/CSS/JavaScript interface with no npm dependencies, remote fonts or account. The native core keeps running when the tab is closed.
+
+| Environment | Support |
 | --- | --- |
-| Instalar e fazer funcionar com ViGEmBus e HidHide | [Instalação completa no Windows](docs/INSTALACAO.md) |
-| Entender todas as telas e configurar cada comando | [Configuração e calibração](docs/CONFIGURACAO.md) |
-| Exportar, importar, compartilhar, restaurar ou migrar ajustes | [Perfis e backups](docs/PERFIS.md) |
-| Resolver volante invisível, comandos duplicados, pedais ou falhas | [Solução de problemas](docs/SOLUCAO-DE-PROBLEMAS.md) |
-| Compilar, testar, empacotar ou executar no Linux | [Desenvolvimento](docs/DESENVOLVIMENTO.md) |
-| Automatizar ou entender o formato de configuração | [Referência da API e do perfil](docs/API.md) |
-| Conferir as fontes e licenças | [Referências](docs/REFERENCES.md) · [Componentes externos](THIRD_PARTY_NOTICES.md) |
+| Windows x64 | XInput 1.4 input, DirectInput 8 fallback, USB diagnostics and virtual ViGEm Xbox 360 output. Windows 11 is the main target. |
+| Linux | evdev/xpad input for IDs `24C6:5B00` and `24C6:5B03`, interface and Demo; **no virtual game output**. |
+| Other wheels | Detection is not guaranteed. The target is the **458 Italia Xbox 360**, not the 458 Spider Xbox One or TX. |
 
-## Recursos e compatibilidade
+The game receives a **gamepad**. The application does not add native wheel support, force feedback, the Guide button or sensors missing from the hardware. DirectInput combines the pedals and cannot preserve simultaneous throttle and brake; prefer XInput. The system has up to four XInput slots.
 
-- Seis saídas analógicas: LX, LY, RX, RY, RT e LT; 14 botões/direcional. Eixos e botões físicos podem alimentar qualquer saída disponível.
-- Identificação de entradas por movimento, troca de pedais e dois botões para os dois lados de um analógico.
-- Zona morta, fim do curso/sensibilidade, curva, inversão e centro por eixo; gráficos e ajustes por mouse, toque, números e sliders.
-- Salvamento automático em `profile.ini`, exportação em JSON ou código `BW2.`, importação dos antigos `PB2.` e diagnóstico exportável.
-- Interface HTML/CSS/JavaScript local, sem npm, fontes remotas ou conta. O núcleo continua funcionando com a aba fechada.
+[ViGEm was discontinued by its maintainer](https://docs.nefarius.at/projects/ViGEm/End-of-Life/). Boreal Wheel does not install drivers automatically. The package includes `ViGEmClient.dll` x64; **install ViGEmBus and HidHide separately**. This executable does not have a publisher's digital signature.
 
-| Ambiente | Suporte |
-| --- | --- |
-| Windows x64 | Entrada XInput 1.4, fallback DirectInput 8, diagnóstico USB e saída ViGEm Xbox 360. Windows 11 é o alvo principal. |
-| Linux | Entrada evdev/xpad dos IDs `24C6:5B00` e `24C6:5B03`, interface e Demo; **sem saída virtual para jogos**. |
-| Outros volantes | Sem garantia de detecção. O alvo é o **458 Italia Xbox 360**, não o 458 Spider Xbox One ou o TX. |
-
-O jogo recebe um **gamepad**, portanto o aplicativo não acrescenta suporte nativo de volante, force feedback, botão Guide ou sensores ausentes no hardware. DirectInput combina os pedais e não preserva aceleração e frenagem simultâneas; prefira XInput. Há até quatro slots XInput no sistema.
-
-O [ViGEm foi descontinuado pelo mantenedor](https://docs.nefarius.at/projects/ViGEm/End-of-Life/). Boreal Wheel não instala drivers automaticamente. `ViGEmClient.dll` x64 acompanha o pacote; **ViGEmBus e HidHide são instalados separadamente**. O executável desta versão não possui assinatura digital de publicação.
-
-## Executar a partir do código
+## Run from source
 
 ```bash
 git clone https://github.com/Caio-Saraiva/boreal-wheel.git
 cd boreal-wheel
-# Linux: compilador C e bibliotecas de desenvolvimento
+# Linux: install a C compiler and development libraries first
 ./run.sh --demo
 ```
 
-No Windows, com Visual Studio/Build Tools, Windows SDK e CMake:
+On Windows, with Visual Studio/Build Tools, Windows SDK and CMake:
 
 ```powershell
 .\build-windows.ps1
 .\run-windows.ps1
 ```
 
-Veja os requisitos e alternativas no [guia de desenvolvimento](docs/DESENVOLVIMENTO.md).
+See [development](docs/DEVELOPMENT.md) for requirements, language options and alternative builds.
 
-## Estado da versão 0.2.0
+## Version 0.3.0 status
 
-A base anterior teve leitura do volante físico e uso em jogo relatados no Windows com HidHide. A renomeação para Boreal Wheel é verificada por testes do mapeamento C, dez testes de integração da API, testes da interface em Firefox e compilação cruzada Windows x64. As capturas são do modo Demo.
+The earlier project had physical-wheel input and in-game use reported on Windows with HidHide. This update adds English-first presentation and Brazilian Portuguese support across the application, native messages, scripts, guides and distribution.
 
-**Ainda requer validação no hardware:** esta distribuição renomeada, a calibração e o fluxo de perfis no Windows com volante e jogo reais. Testes no Linux e compilação não substituem essa conferência.
+Validation covers C mapping tests, native API integration, both interface languages in real Firefox, responsive layouts and Windows x64 cross-compilation. Screenshots use Demo mode.
 
-Código sob [licença MIT](LICENSE). Este projeto é independente de Thrustmaster, Ferrari, Microsoft e Nefarius.
+**Hardware validation still needed:** this distribution, calibration and profile workflow on Windows with a real wheel and game. Linux tests and compilation do not replace that check.
+
+Code licensed under [MIT](LICENSE). This project is independent of Thrustmaster, Ferrari, Microsoft and Nefarius.

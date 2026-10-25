@@ -1,11 +1,13 @@
-# Componentes externos
+# Third-party notices
 
-A interface, o núcleo e o desenho SVG do volante foram criados para este projeto. Não são software oficial Thrustmaster, Ferrari ou Microsoft. Nomes de produtos identificam o hardware e o alvo de compatibilidade.
+**English** | [Português (Brasil)](docs/pt-BR/THIRD_PARTY_NOTICES.md)
 
-O pacote Windows inclui **ViGEmClient.dll**, compilada a partir de [nefarius/ViGEmClient](https://github.com/nefarius/ViGEmClient), commit `b66d02d57e32cc8595369c53418b843e958649b4`, sob licença MIT, copyright 2017–2023 Nefarius Software Solutions e.U. and Contributors. A licença integral está em [docs/LICENSE-ViGEmClient.txt](docs/LICENSE-ViGEmClient.txt) e acompanha a DLL no pacote Windows.
+The interface, core and wheel SVG were created for this project. This is not official Thrustmaster, Ferrari or Microsoft software. Product names identify the hardware and compatibility target.
 
-SHA256 do arquivo-fonte oficial ZIP usado no build: `f1d34de29007e0fb17a15f1656c8b84c500bf33aee4e30d8317df1368e76e36c`.
+The Windows package includes **ViGEmClient.dll**, built from [nefarius/ViGEmClient](https://github.com/nefarius/ViGEmClient), commit `b66d02d57e32cc8595369c53418b843e958649b4`, under the MIT license, copyright 2017–2023 Nefarius Software Solutions e.U. and Contributors. The complete license is in [docs/LICENSE-ViGEmClient.txt](docs/LICENSE-ViGEmClient.txt) and is included alongside the DLL in the Windows package.
 
-A DLL do pacote foi compilada por MinGW-w64 com runtime estático. O runtime MinGW-w64 contém componentes de domínio público e licenças permissivas; as notificações pertinentes acompanham o pacote em `LICENSES-MinGW/`. GCC/libgcc/libstdc++ estão sujeitos à GNU GPL com [GCC Runtime Library Exception](https://www.gnu.org/licenses/gcc-exception-3.1.html), aplicável ao runtime vinculado. As licenças completas estão no pacote.
+SHA256 of the official source ZIP used for the build: `f1d34de29007e0fb17a15f1656c8b84c500bf33aee4e30d8317df1368e76e36c`.
 
-O driver **ViGEmBus** e o **HidHide** não são redistribuídos nem instalados pelo projeto. Eles têm seus próprios termos e ciclos de suporte.
+The packaged DLL is built with MinGW-w64 and a static runtime. The MinGW-w64 runtime contains public-domain and permissively licensed components; relevant notices are included in `LICENSES-MinGW/`. GCC/libgcc/libstdc++ use the GNU GPL with the [GCC Runtime Library Exception](https://www.gnu.org/licenses/gcc-exception-3.1.html), as applicable to the linked runtime. Full license texts are included in the package. Original third-party license texts are retained in their original language.
+
+The **ViGEmBus** and **HidHide** drivers are neither redistributed nor installed by this project. They have their own terms and support lifecycles.

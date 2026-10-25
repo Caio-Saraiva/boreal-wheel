@@ -12,3 +12,6 @@ __pycache__/
 *.pyc
 /boreal-wheel-perfil*.json
 /boreal-wheel-diagnostico*.json
+
+/boreal-wheel-profile*.json
+/boreal-wheel-diagnostics*.json

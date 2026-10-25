@@ -42,7 +42,7 @@ static BWReport report;
 static int demo_mode, demo_auto=1, output_requested, output_active;
 static double map_us, observed_hz;
 static unsigned long long packets;
-static char output_status[256]="Saída virtual desativada";
+static char output_status[256]="Virtual output disabled";
 static int port=4580;
 static void stop_signal(int sig){(void)sig;running=0;}
 static void config_load(void) {
@@ -87,13 +87,13 @@ static void *worker(void *unused)
             if(automatic){in.steering=(float)(sin(t*.62)*.67);in.throttle=(float)((sin(t*1.2)+1)*.43);in.brake=(float)fmax(0,sin(t*.8-2)*.7);in.buttons=(uint16_t)(1u<<(12+((int)t/2)%4));}
             else in=manual;
             in.connected=1;in.axes[0]=in.steering;in.axes[1]=in.ly;in.axes[2]=in.brake*2-1;in.axes[3]=in.rx;in.axes[4]=in.ry;in.axes[5]=in.throttle*2-1;
-            snprintf(in.name,sizeof(in.name),"Ferrari 458 Italia · simulação");snprintf(in.backend,sizeof(in.backend),"Demonstração %s",automatic?"automática":"interativa");
-            snprintf(in.detail,sizeof(in.detail),"Entradas sintéticas para validar a interface. Nenhum hardware foi detectado neste modo; saída para jogos bloqueada.");
+            snprintf(in.name,sizeof(in.name),"%s",bw_text("Ferrari 458 Italia · simulation"));snprintf(in.backend,sizeof(in.backend),bw_text("Demonstration %s"),automatic?bw_text("automatic"):bw_text("interactive"));
+            snprintf(in.detail,sizeof(in.detail),"%s",bw_text("Synthetic inputs for interface testing. No hardware is detected in this mode; game output is blocked."));
         } else bw_input_read(&in,&c);
         start=bw_now();bw_map(&in,&c,&out);elapsed=(bw_now()-start)*1e6;
         active=bw_output(&out,requested && !demo && in.connected,status,sizeof(status));
-        if(demo)snprintf(status,sizeof(status),"Demonstração · saída para jogos bloqueada");
-        else if(requested&&!in.connected)snprintf(status,sizeof(status),"Aguardando entrada física · saída neutralizada");
+        if(demo)snprintf(status,sizeof(status),"%s",bw_text("Demonstration · game output blocked"));
+        else if(requested&&!in.connected)snprintf(status,sizeof(status),"%s",bw_text("Waiting for physical input · output neutralized"));
         ++count;
         LOCK();latest=in;report=out;map_us=elapsed;output_active=active;snprintf(output_status,sizeof(output_status),"%s",status);++packets;
         if(bw_now()-window>=1){observed_hz=count/(bw_now()-window);count=0;window=bw_now();}
@@ -197,26 +197,26 @@ static void handle(socket_t fd) {
     struct timeval timeout={1,0};setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
 #endif
     while(used<sizeof(request)-1){n=recv(fd,request+used,(int)(sizeof(request)-1-used),0);if(n<=0)return;used+=(size_t)n;request[used]=0;if(strstr(request,"\r\n\r\n"))break;}
-    end=strstr(request,"\r\n\r\n");if(!end){error_response(fd,400,"Request too large");return;}body=end+4;
-    if(sscanf(request,"%11s %127s",method,path)!=2){error_response(fd,400,"Invalid request");return;}
+    end=strstr(request,"\r\n\r\n");if(!end){error_response(fd,400,bw_text("Request too large"));return;}body=end+4;
+    if(sscanf(request,"%11s %127s",method,path)!=2){error_response(fd,400,bw_text("Invalid request"));return;}
     /* Parse headers case insensitively; reject chunking and ambiguous lengths. */
     int length_seen=0;
     for(line=strstr(request,"\r\n")+2;line<end;) {
         char *nl=strstr(line,"\r\n"),*colon=strchr(line,':'),*value;
-        if(!nl||!colon||colon>nl){error_response(fd,400,"Invalid header");return;}
+        if(!nl||!colon||colon>nl){error_response(fd,400,bw_text("Invalid header"));return;}
         *nl=0;*colon=0;value=colon+1;while(*value==' '||*value=='\t')++value;
         for(char *k=line;*k;++k)if(*k>='A'&&*k<='Z')*k=(char)(*k+32);
         if(!strcmp(line,"host"))snprintf(host,sizeof(host),"%s",value);
         else if(!strcmp(line,"origin"))snprintf(origin,sizeof(origin),"%s",value);
         else if(!strcmp(line,"content-type"))snprintf(ctype,sizeof(ctype),"%s",value);
-        else if(!strcmp(line,"transfer-encoding")){error_response(fd,400,"Chunking unsupported");return;}
-        else if(!strcmp(line,"content-length")){char *tail;unsigned long len=strtoul(value,&tail,10);if(length_seen++||!*value||*tail||len>16384){error_response(fd,400,"Invalid length");return;}body_len=(size_t)len;}
+        else if(!strcmp(line,"transfer-encoding")){error_response(fd,400,bw_text("Chunking unsupported"));return;}
+        else if(!strcmp(line,"content-length")){char *tail;unsigned long len=strtoul(value,&tail,10);if(length_seen++||!*value||*tail||len>16384){error_response(fd,400,bw_text("Invalid length"));return;}body_len=(size_t)len;}
         line=nl+2;
     }
     char expected_host[64],expected_origin[96];snprintf(expected_host,sizeof(expected_host),"127.0.0.1:%d",port);snprintf(expected_origin,sizeof(expected_origin),"http://%s",expected_host);
-    if(strcmp(host,expected_host)){error_response(fd,403,"Use the 127.0.0.1 address printed in the terminal");return;}
+    if(strcmp(host,expected_host)){error_response(fd,403,bw_text("Use the 127.0.0.1 address printed in the terminal"));return;}
     size_t offset=(size_t)(body-request);
-    if(offset+body_len>=sizeof(request)){error_response(fd,400,"Request too large");return;}
+    if(offset+body_len>=sizeof(request)){error_response(fd,400,bw_text("Request too large"));return;}
     while(used<offset+body_len){n=recv(fd,request+used,(int)(offset+body_len-used),0);if(n<=0)return;used+=(size_t)n;}body[body_len]=0;
     if(!strcmp(method,"GET")&&!strcmp(path,"/api/state")){char json[16384];status_json(json,sizeof(json));response(fd,200,"application/json",json,strlen(json));return;}
     if(!strcmp(method,"GET")&&!strcmp(path,"/api/profile")) {
@@ -226,59 +226,70 @@ static void handle(socket_t fd) {
     }
     if(!strcmp(method,"POST")) {
         BWConfig c;
-        if(strcmp(origin,expected_origin)||strcmp(ctype,"application/x-www-form-urlencoded")){error_response(fd,403,"Same-origin form requests required");return;}
+        if(strcmp(origin,expected_origin)||strcmp(ctype,"application/x-www-form-urlencoded")){error_response(fd,403,bw_text("Same-origin form requests required"));return;}
         LOCK();c=config;UNLOCK();
         if(!strcmp(path,"/api/config")||!strcmp(path,"/api/profile")) {
             if(!strcmp(path,"/api/profile"))bw_defaults(&c);
-            if(!parse_pairs(&c,body,!strcmp(path,"/api/profile"))){error_response(fd,400,"Invalid setting");return;}
-            if(!config_save(&c)){error_response(fd,400,"Cannot save profile.ini");return;}
+            if(!parse_pairs(&c,body,!strcmp(path,"/api/profile"))){error_response(fd,400,bw_text("Invalid setting"));return;}
+            if(!config_save(&c)){error_response(fd,400,bw_text("Cannot save profile.ini"));return;}
             LOCK();config=c;UNLOCK();
-        } else if(!strcmp(path,"/api/demo")) {if(!demo_values(body)){error_response(fd,400,"Invalid demo input");return;}}
+        } else if(!strcmp(path,"/api/demo")) {if(!demo_values(body)){error_response(fd,400,bw_text("Invalid demo input"));return;}}
         else if(!strcmp(path,"/api/action")) {
             if(!strcmp(body,"action=reset")) {
-                bw_defaults(&c);if(!config_save(&c)){error_response(fd,400,"Cannot save profile");return;}LOCK();config=c;UNLOCK();
+                bw_defaults(&c);if(!config_save(&c)){error_response(fd,400,bw_text("Cannot save profile"));return;}LOCK();config=c;UNLOCK();
             } else if(!strcmp(body,"action=center") || (!strncmp(body,"action=center_",14)&&strlen(body)==15&&body[14]>='0'&&body[14]<='3')) {
                 int axis=strlen(body)==15?body[14]-'0':0;
                 LOCK();BWInput in=latest;UNLOCK();BWConfig temporary=c;temporary.axis[axis].center=0;float center=bw_axis_input(&in,&temporary,axis);int available=in.connected&&c.axis[axis].source>=0;
-                if(!available){error_response(fd,400,"Sem entrada para calibrar");return;}
-                if(fabsf(center)>.5f){error_response(fd,400,"Deixe o controle proximo do centro antes de capturar");return;}
-                c.axis[axis].center=center;if(!config_save(&c)){error_response(fd,400,"Cannot save profile");return;}LOCK();config=c;UNLOCK();
+                if(!available){error_response(fd,400,bw_text("No input available for calibration"));return;}
+                if(fabsf(center)>.5f){error_response(fd,400,bw_text("Keep the control near center before capturing"));return;}
+                c.axis[axis].center=center;if(!config_save(&c)){error_response(fd,400,bw_text("Cannot save profile"));return;}LOCK();config=c;UNLOCK();
             } else if(!strncmp(body,"action=limit_",13)&&strlen(body)==14&&body[13]>='0'&&body[13]<='5') {
                 int axis=body[13]-'0';LOCK();BWInput in=latest;UNLOCK();
                 float value=fabsf(bw_axis_input(&in,&c,axis));
-                if(!in.connected||c.axis[axis].source<0||value<.05f||value<c.axis[axis].deadzone+.02f){error_response(fd,400,"Mantenha o controle no fim do curso antes de capturar");return;}
+                if(!in.connected||c.axis[axis].source<0||value<.05f||value<c.axis[axis].deadzone+.02f){error_response(fd,400,bw_text("Hold the control at full travel before capturing"));return;}
                 c.axis[axis].limit=value;
-                if(!config_save(&c)){error_response(fd,400,"Cannot save profile");return;}LOCK();config=c;UNLOCK();
+                if(!config_save(&c)){error_response(fd,400,bw_text("Cannot save profile"));return;}LOCK();config=c;UNLOCK();
             } else {
                 LOCK();
                 if(!strcmp(body,"action=demo")){demo_mode=1;output_requested=0;demo_auto=1;}
                 else if(!strcmp(body,"action=physical")){demo_mode=0;output_requested=0;}
                 else if(!strcmp(body,"action=auto")){demo_auto=1;}
                 else if(!strcmp(body,"action=manual")){demo_auto=0;memset(&manual_input,0,sizeof(manual_input));}
-                else if(!strcmp(body,"action=start")){if(demo_mode){UNLOCK();error_response(fd,400,"Demo cannot feed games");return;}output_requested=1;}
+                else if(!strcmp(body,"action=start")){if(demo_mode){UNLOCK();error_response(fd,400,bw_text("Demo cannot feed games"));return;}output_requested=1;}
                 else if(!strcmp(body,"action=stop"))output_requested=0;
-                else {UNLOCK();error_response(fd,400,"Unknown action");return;}
+                else {UNLOCK();error_response(fd,400,bw_text("Unknown action"));return;}
                 UNLOCK();
             }
-        } else {error_response(fd,404,"Not found");return;}
+        } else {error_response(fd,404,bw_text("Not found"));return;}
         response(fd,200,"application/json","{\"ok\":true}",11);return;
     }
-    if(strcmp(method,"GET")){error_response(fd,400,"Unsupported method");return;}
+    if(strcmp(method,"GET")){error_response(fd,400,bw_text("Unsupported method"));return;}
     const char *file=NULL,*type=NULL;
     if(!strcmp(path,"/")){file="web/index.html";type="text/html; charset=utf-8";}
     else if(!strcmp(path,"/style.css")){file="web/style.css";type="text/css; charset=utf-8";}
     else if(!strcmp(path,"/app.js")){file="web/app.js";type="text/javascript; charset=utf-8";}
+    else if(!strcmp(path,"/i18n.js")){file="web/i18n.js";type="text/javascript; charset=utf-8";}
+    else if(!strcmp(path,"/locales.js")){file="web/locales.js";type="text/javascript; charset=utf-8";}
     else if(!strcmp(path,"/favicon.svg")){file="web/favicon.svg";type="image/svg+xml";}
-    if(!file){error_response(fd,404,"Not found");return;}
-    FILE *f=fopen(file,"rb");if(!f){error_response(fd,404,"UI assets missing; start from boreal-wheel");return;}
+    if(!file){error_response(fd,404,bw_text("Not found"));return;}
+    FILE *f=fopen(file,"rb");if(!f){error_response(fd,404,bw_text("UI assets missing; start from boreal-wheel"));return;}
     if(fseek(f,0,SEEK_END)!=0){fclose(f);return;}long len=ftell(f);rewind(f);
     if(len<0||len>1024*1024){fclose(f);return;}char *data=malloc((size_t)len+1);if(!data){fclose(f);return;}
     size_t got=fread(data,1,(size_t)len,f);fclose(f);response(fd,200,type,data,got);free(data);
 }
 int main(int argc,char **argv) {
     int i;socket_t listener;struct sockaddr_in address;
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+    if(getenv("BW_LANG") && !bw_set_language(getenv("BW_LANG"))){fprintf(stderr,"%s",bw_text("Invalid language. Use en or pt-BR.\n"));return 1;}
+    /* Choose the process language before validating other arguments. */
+    for(i=1;i<argc;++i)if(!strcmp(argv[i],"--lang")){
+        if(i+1>=argc||!bw_set_language(argv[i+1])){fprintf(stderr,"%s",bw_text("Invalid language. Use en or pt-BR.\n"));return 1;}
+        ++i;
+    }
     bw_defaults(&config);config_load();
-    for(i=1;i<argc;++i){if(!strcmp(argv[i],"--demo"))demo_mode=1;else if(!strcmp(argv[i],"--port")&&i+1<argc){char *tail;long p=strtol(argv[++i],&tail,10);if(*tail||p<1024||p>65535){fprintf(stderr,"Invalid port\n");return 1;}port=(int)p;}else{fprintf(stderr,"Usage: boreal-wheel [--demo] [--port 4580]\n");return 1;}}
+    for(i=1;i<argc;++i){if(!strcmp(argv[i],"--lang")){++i;}else if(!strcmp(argv[i],"--demo"))demo_mode=1;else if(!strcmp(argv[i],"--port")&&i+1<argc){char *tail;long p=strtol(argv[++i],&tail,10);if(*tail||p<1024||p>65535){fprintf(stderr,"%s",bw_text("Invalid port\n"));return 1;}port=(int)p;}else{fprintf(stderr,"%s",bw_text("Usage: boreal-wheel [--demo] [--port 4580] [--lang en|pt-BR]\n"));return 1;}}
     signal(SIGINT,stop_signal);signal(SIGTERM,stop_signal);
 #ifdef _WIN32
     WSADATA data;if(WSAStartup(MAKEWORD(2,2),&data))return 1;InitializeCriticalSection(&mutex);
@@ -292,13 +303,13 @@ int main(int argc,char **argv) {
     int exclusive=1;setsockopt(listener,SOL_SOCKET,SO_EXCLUSIVEADDRUSE,(const char*)&exclusive,sizeof(exclusive));
 #endif
     memset(&address,0,sizeof(address));address.sin_family=AF_INET;address.sin_port=htons((unsigned short)port);address.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
-    if(bind(listener,(struct sockaddr*)&address,sizeof(address))!=0||listen(listener,16)!=0){fprintf(stderr,"Port %d unavailable. Try --port 4581.\n",port);CLOSESOCKET(listener);return 1;}
+    if(bind(listener,(struct sockaddr*)&address,sizeof(address))!=0||listen(listener,16)!=0){fprintf(stderr,bw_text("Port %d unavailable. Try --port 4581.\n"),port);CLOSESOCKET(listener);return 1;}
 #ifdef _WIN32
     HANDLE thread=(HANDLE)_beginthreadex(NULL,0,worker,NULL,0,NULL);if(!thread){CLOSESOCKET(listener);return 1;}
 #else
     pthread_t thread;if(pthread_create(&thread,NULL,worker,NULL)){CLOSESOCKET(listener);return 1;}
 #endif
-    printf("\n  BOREAL WHEEL / Input, reconnected.\n  http://127.0.0.1:%d\n  Mode: %s\n  Ctrl+C to stop.\n\n",port,demo_mode?"DEMONSTRATION (no hardware detection)":"PHYSICAL INPUT");fflush(stdout);
+    printf(bw_text("\n  BOREAL WHEEL / Input, reconnected.\n  http://127.0.0.1:%d\n  Mode: %s\n  Ctrl+C to stop.\n\n"),port,demo_mode?bw_text("DEMONSTRATION (no hardware detection)"):bw_text("PHYSICAL INPUT"));fflush(stdout);
     while(running){fd_set readset;struct timeval wait={0,200000};FD_ZERO(&readset);FD_SET(listener,&readset);if(select((int)listener+1,&readset,NULL,NULL,&wait)>0){socket_t fd=accept(listener,NULL,NULL);if(fd!=INVALID_SOCKET){handle(fd);CLOSESOCKET(fd);}}}
     CLOSESOCKET(listener);
 #ifdef _WIN32

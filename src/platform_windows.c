@@ -81,8 +81,8 @@ static void detect_unreadable_usb(BWInput *in) {
     }
     if(present) {
         in->usb_present=1;
-        snprintf(in->name,sizeof(in->name),"Thrustmaster Ferrari 458 Italia · USB detectado");
-        snprintf(in->detail,sizeof(in->detail),"Volante presente no USB, mas sem entrada legível. Confira o vínculo com o driver Xbox 360 no Gerenciador de Dispositivos e teste em joy.cpl; tente o slot XInput físico em Diagnóstico.");
+        snprintf(in->name,sizeof(in->name),"%s",bw_text("Thrustmaster Ferrari 458 Italia · USB detected"));
+        snprintf(in->detail,sizeof(in->detail),"%s",bw_text("Wheel present on USB, but no readable input. Check the Xbox 360 driver in Device Manager and test in joy.cpl; try the physical XInput slot in Diagnostics."));
     }
 }
 void bw_input_read(BWInput *in,const BWConfig *c) {
@@ -105,14 +105,14 @@ void bw_input_read(BWInput *in,const BWConfig *c) {
             in->ly=normalized(s.Gamepad.sThumbLY);in->rx=normalized(s.Gamepad.sThumbRX);in->ry=normalized(s.Gamepad.sThumbRY);
             in->buttons=s.Gamepad.wButtons;
             in->axes[0]=in->steering;in->axes[1]=in->ly;in->axes[2]=in->brake*2-1;in->axes[3]=in->rx;in->axes[4]=in->ry;in->axes[5]=in->throttle*2-1;
-            snprintf(in->name,sizeof(in->name),caps.SubType==XINPUT_DEVSUBTYPE_WHEEL?"Volante XInput (subtipo WHEEL)":"Controle XInput · seleção manual");
+            snprintf(in->name,sizeof(in->name),caps.SubType==XINPUT_DEVSUBTYPE_WHEEL?bw_text("XInput wheel (WHEEL subtype)"):bw_text("XInput controller · manual selection"));
             snprintf(in->backend,sizeof(in->backend),"XInput 1.4 · slot %lu",(unsigned long)i);
-            snprintf(in->detail,sizeof(in->detail),"Eixos independentes · LX direção / RT acelerador / LT freio. Confirme o modelo pelos movimentos.");
+            snprintf(in->detail,sizeof(in->detail),"%s",bw_text("Independent axes · LX steering / RT throttle / LT brake. Confirm the device by moving its controls."));
             return;
         }
     }
     if(c->slot>=0 && !c->directinput) {
-        snprintf(in->detail,sizeof(in->detail),"Slot XInput selecionado não disponível (ou é a saída virtual do Boreal Wheel)."); detect_unreadable_usb(in);return;
+        snprintf(in->detail,sizeof(in->detail),"%s",bw_text("The selected XInput slot is unavailable (or is Boreal Wheel's virtual output).")); detect_unreadable_usb(in);return;
     }
     if(!di) DirectInput8Create(GetModuleHandle(NULL),DIRECTINPUT_VERSION,&IID_IDirectInput8A,(void**)&di,NULL);
     if(di && !di_device && bw_now()>=next_di_scan) { next_di_scan=bw_now()+1; IDirectInput8_EnumDevices(di,DI8DEVCLASS_GAMECTRL,find_wheel,NULL,DIEDFL_ATTACHEDONLY); }
@@ -137,12 +137,12 @@ void bw_input_read(BWInput *in,const BWConfig *c) {
                 if(p>=4500&&p<=13500)in->buttons|=8;
             }
             snprintf(in->name,sizeof(in->name),"%s",di_name);snprintf(in->backend,sizeof(in->backend),"DirectInput 8 · fallback");
-            snprintf(in->detail,sizeof(in->detail),"Pedais combinados em DirectInput: não preserva acelerador + freio simultâneos. Prefira XInput ou selecione o slot físico.");
+            snprintf(in->detail,sizeof(in->detail),"%s",bw_text("Combined pedals in DirectInput: simultaneous throttle + brake are not preserved. Prefer XInput or select the physical slot."));
             return;
         }
         IDirectInputDevice8_Unacquire(di_device);IDirectInputDevice8_Release(di_device);di_device=NULL;
     }
-    snprintf(in->detail,sizeof(in->detail),"Sem entrada legível. Confira o driver Xbox 360 em devmgmt.msc e teste em joy.cpl. Se listado como gamepad, escolha o slot físico.");
+    snprintf(in->detail,sizeof(in->detail),"%s",bw_text("No readable input. Check the Xbox 360 driver in devmgmt.msc and test in joy.cpl. If listed as a gamepad, select the physical slot."));
     detect_unreadable_usb(in);
 }
 void bw_input_close(void) {
@@ -158,34 +158,34 @@ void bw_output_close(void) {
 }
 int bw_output(const BWReport *report,int enabled,char *status,int capacity) {
     static double next_retry;
-    if(!enabled){if(target||client)bw_output_close();snprintf(status,capacity,"Saída virtual desativada");return 0;}
+    if(!enabled){if(target||client)bw_output_close();snprintf(status,capacity,"%s",bw_text("Virtual output disabled"));return 0;}
     if(!vi_dll) {
         char path[MAX_PATH];DWORD len=GetModuleFileNameA(NULL,path,sizeof(path));char *slash;
-        if(len==0||len>=sizeof(path)){snprintf(status,capacity,"Caminho do executável inválido");return 0;}
+        if(len==0||len>=sizeof(path)){snprintf(status,capacity,"%s",bw_text("Invalid executable path"));return 0;}
         slash=strrchr(path,'\\');if(slash)slash[1]='\0';
         if(strlen(path)+strlen("ViGEmClient.dll")>=sizeof(path))return 0;
         strcat(path,"ViGEmClient.dll");
         vi_dll=LoadLibraryExA(path,NULL,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_SYSTEM32);
-        if(!vi_dll){snprintf(status,capacity,"ViGEmClient.dll ausente ao lado do executável");return 0;}
+        if(!vi_dll){snprintf(status,capacity,"%s",bw_text("ViGEmClient.dll missing next to the executable"));return 0;}
 #define VLOAD(var,name) do { FARPROC proc=GetProcAddress(vi_dll,name); memcpy(&var,&proc,sizeof(proc)); if(!var)goto invalid_dll; } while(0)
         VLOAD(v_alloc,"vigem_alloc");VLOAD(v_free,"vigem_free");VLOAD(v_connect,"vigem_connect");VLOAD(v_disconnect,"vigem_disconnect");
         VLOAD(v_target_alloc,"vigem_target_x360_alloc");VLOAD(v_target_free,"vigem_target_free");VLOAD(v_add,"vigem_target_add");VLOAD(v_remove,"vigem_target_remove");
         VLOAD(v_update,"vigem_target_x360_update");VLOAD(v_index,"vigem_target_x360_get_user_index");
 #undef VLOAD
     }
-    if(!target && bw_now()<next_retry){snprintf(status,capacity,"Aguardando nova tentativa do ViGEmBus");return 0;}
+    if(!target && bw_now()<next_retry){snprintf(status,capacity,"%s",bw_text("Waiting to retry ViGEmBus"));return 0;}
     if(!client) {
         client=v_alloc();
-        if(!client || v_connect(client)!=0x20000000u) {bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"ViGEmBus não disponível · instale o driver oficial");return 0;}
+        if(!client || v_connect(client)!=0x20000000u) {bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"%s",bw_text("ViGEmBus unavailable · install the official driver"));return 0;}
     }
     if(!target) {
         target=v_target_alloc();
-        if(!target||v_add(client,target)!=0x20000000u){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"Falha ao criar Xbox 360 virtual no ViGEmBus");return 0;}
+        if(!target||v_add(client,target)!=0x20000000u){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"%s",bw_text("Could not create a virtual Xbox 360 controller in ViGEmBus"));return 0;}
     }
     /* Never read our own target. Fail closed if its XInput slot is not known. */
-    if(v_index(client,target,&virtual_slot)!=0x20000000u || virtual_slot>3){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"Não foi possível identificar o slot virtual com segurança");return 0;}
-    if(v_update(client,target,*report)!=0x20000000u){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"Falha ao enviar relatório ao ViGEmBus");return 0;}
-    snprintf(status,capacity,"Xbox 360 virtual ativo · slot %lu",(unsigned long)virtual_slot);return 1;
+    if(v_index(client,target,&virtual_slot)!=0x20000000u || virtual_slot>3){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"%s",bw_text("Could not safely identify the virtual slot"));return 0;}
+    if(v_update(client,target,*report)!=0x20000000u){bw_output_close();next_retry=bw_now()+2;snprintf(status,capacity,"%s",bw_text("Could not send report to ViGEmBus"));return 0;}
+    snprintf(status,capacity,bw_text("Virtual Xbox 360 active · slot %lu"),(unsigned long)virtual_slot);return 1;
 invalid_dll:
-    FreeLibrary(vi_dll);vi_dll=NULL;snprintf(status,capacity,"ViGEmClient.dll incompatível · confira build x64");return 0;
+    FreeLibrary(vi_dll);vi_dll=NULL;snprintf(status,capacity,"%s",bw_text("Incompatible ViGEmClient.dll · check the x64 build"));return 0;
 }

@@ -71,7 +71,7 @@ void bw_input_read(BWInput *in,const BWConfig *c) {
             snprintf(path,sizeof(path),"/dev/input/event%d",i);
             fd=open(path,O_RDONLY|O_NONBLOCK);
             if(fd<0) {
-                snprintf(device.detail,sizeof(device.detail),"USB detectado, mas sem leitura de %s. Verifique permissões Linux no README.",path);
+                snprintf(device.detail,sizeof(device.detail),bw_text("USB detected, but cannot read %s. Check Linux permissions in the README."),path);
                 continue;
             }
             if(ioctl(fd,EVIOCGID,&id)<0 || id.vendor!=0x24c6 || (id.product!=0x5b00 && id.product!=0x5b03)){close(fd);continue;}
@@ -81,7 +81,7 @@ void bw_input_read(BWInput *in,const BWConfig *c) {
             snprintf(device.detail,sizeof(device.detail),"USB %04X:%04X · %s",id.vendor,id.product,path);
             read_snapshot();break;
         }
-        if(!device.usb_present)snprintf(device.detail,sizeof(device.detail),"Conecte o Ferrari 458 Italia Xbox 360 por USB. A leitura Linux requer o módulo xpad.");
+        if(!device.usb_present)snprintf(device.detail,sizeof(device.detail),"%s",bw_text("Connect the Ferrari 458 Italia Xbox 360 by USB. Linux input requires the xpad module."));
     }
     if(wheel_fd>=0) {
         struct input_event ev[32]; ssize_t n;
@@ -97,6 +97,6 @@ void bw_input_read(BWInput *in,const BWConfig *c) {
 void bw_input_close(void) { if(wheel_fd>=0)close(wheel_fd); wheel_fd=-1;next_scan=0;memset(&device,0,sizeof(device)); }
 int bw_output(const BWReport *report,int enabled,char *status,int capacity) {
     (void)report; (void)enabled;
-    snprintf(status,(size_t)capacity,"Prévia Linux · saída XInput disponível apenas no Windows"); return 0;
+    snprintf(status,(size_t)capacity,"%s",bw_text("Linux preview · XInput output is only available on Windows")); return 0;
 }
 void bw_output_close(void) {}
